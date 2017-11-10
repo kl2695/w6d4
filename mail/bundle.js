@@ -70,6 +70,7 @@
 const Router = __webpack_require__(1); 
 const Inbox = __webpack_require__(5);
 const Sent = __webpack_require__(4);
+const Compose = __webpack_require__(6); 
 
 document.addEventListener("DOMContentLoaded", function(event) {
   
@@ -83,7 +84,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     const node = document.querySelector(".content"); 
     const routes = {
       inbox: Inbox, 
-      sent: Sent    
+      sent: Sent, 
+      compose: Compose    
     };
 
     const router = new Router(node, routes);
@@ -115,6 +117,7 @@ class Router {
     this.node.innerHTML = '';
     const component = this.activeRoute();
     if(component){
+      
       this.node.appendChild(component.render()); 
     }
   }
@@ -142,13 +145,41 @@ let messages = {
 }; 
 
 
+class Message{
+  constructor(from, to, subject, body){
+    this.from = from;
+    this.to = to; 
+    this.subject = subject; 
+    this.body = body; 
+  }
+  
+}
+
+
 const MessageStore = {
   getInboxMessages: function(){
     return messages.inbox; 
   },
+  
   getSentMessages: function(){
     return messages.sent; 
+  }, 
+  
+  messageDraft: new Message("", "", "", ""), 
+  
+  getMessageDraft: function(){
+    return this.messageDraft; 
+  },
+  
+  updateDraftField: function(field, value){
+    this.messageDraft[field] = value; 
+  },
+  
+  sendDraft: function(){
+    messages.sent.push(this.messageDraft); 
+    this.messageDraft = new Message("", "", "", ""); 
   }
+  
 };
 
 
@@ -231,6 +262,56 @@ const Inbox = {
 };
 
 module.exports = Inbox; 
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const MessageStore = __webpack_require__(3); 
+
+
+const Compose = {
+  
+  render: function(){
+    let div = document.createElement("DIV"); 
+    div.className = "new-message"; 
+    
+    div.addEventListener("change", (event) => {
+      const name = event.target.name;
+      const value = event.target.value;
+      MessageStore.updateDraftField(name, value)
+    });
+    
+    div.addEventListener("submit", (event) => {
+      event.preventDefault();
+      MessageStore.sendDraft()
+      window.location.hash = "inbox"
+    });
+    
+    div.innerHTML = this.renderForm(); 
+    return div;
+  }, 
+  
+  renderForm: function(){
+    let messageDraft = MessageStore.getMessageDraft(); 
+    
+    messageDraft.innerHTML = `<p class="compose-form">
+    <form class = "compose-form">
+      <input placeholder="Recipient" name="to" type="text" value="${messageDraft.to}">
+      <input placeholder="Subject" name="subject" type="text" value="${messageDraft.subject}">
+      <textarea name="body" rows="20">${messageDraft.body}</textarea>
+      <button type="submit" class="btn btn-primary submit-message">Send</button>
+    </form>
+    </p>`;
+    
+    return messageDraft.innerHTML; 
+    
+    
+    
+  }
+}
+
+module.exports = Compose;
 
 /***/ })
 /******/ ]);

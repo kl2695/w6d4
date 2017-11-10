@@ -14,6 +14,7 @@ class Router {
     this.node.innerHTML = '';
     const component = this.activeRoute();
     if(component){
+      
       this.node.appendChild(component.render()); 
     }
   }
